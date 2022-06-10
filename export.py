@@ -12,6 +12,7 @@ import random
 from collections import namedtuple
 from functools import reduce
 
+from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -19,16 +20,16 @@ from selenium.common.exceptions import NoSuchElementException
 
 import db
 from dateutil import format_tran_date_for_file, format_tran_date_for_qif,\
-                     parse_tran_date
+    parse_tran_date
 
 random.seed()
-BASE_URL = 'https://28degrees-online.latitudefinancial.com.au/';
+BASE_URL = 'https://28degrees-online.latitudefinancial.com.au/access/login'
 WAIT_DELAY = 3
 LOGIN_DELAY = 3
 
 Transaction = namedtuple('Transaction',
                          ['date', 'payer', 'amount', 'memo', 'payee'])
-export_path = './export'
+export_path = './output/export'
 
 
 def messages(before, after_ok, after_fail):
@@ -58,8 +59,23 @@ def get_next_btn(browser):
     return browser.find_element(By.NAME, 'nextButton')
 
 
+def set_chrome_options() -> None:
+    """Sets chrome options for Selenium.
+    Chrome options for headless browser is enabled.
+    """
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_prefs = {}
+    chrome_options.experimental_options["prefs"] = chrome_prefs
+    chrome_prefs["profile.default_content_settings"] = {"images": 2}
+    return chrome_options
+
+
 def login(creds, captcha):
 
+    # driver = webdriver.Chrome(options=set_chrome_options()) # Use this if using docker
     driver = webdriver.Chrome()
     driver.get(BASE_URL)
 
@@ -82,7 +98,8 @@ def login(creds, captcha):
 
     time.sleep(WAIT_DELAY)
 
-    tranLink = driver.find_element(By.XPATH, u'//a[text()="View Transactions"]')
+    tranLink = driver.find_element(
+        By.XPATH, u'//a[text()="View Transactions"]')
     tranLink.click()
 
     nextBtn = get_next_btn(driver)
@@ -93,15 +110,20 @@ def login(creds, captcha):
 def fetch_transactions(driver):
 
     trans = []
-    rows = driver.find_elements(By.CSS_SELECTOR, 'div[name="transactionsHistory"] tr[name="DataContainer"]')
+    rows = driver.find_elements(
+        By.CSS_SELECTOR, 'div[name="transactionsHistory"] tr[name="DataContainer"]')
 
     for row in rows:
 
-        dateText = row.find_element(By.CSS_SELECTOR, 'div[name="Transaction_TransactionDate"]').text
+        dateText = row.find_element(
+            By.CSS_SELECTOR, 'div[name="Transaction_TransactionDate"]').text
         date = parse_tran_date(dateText)
-        payer = row.find_element(By.CSS_SELECTOR, 'div[name="Transaction_CardName"]').text
-        desc_payee = row.find_element(By.CSS_SELECTOR, 'div[name="Transaction_TransactionDescription"]').text
-        amount = row.find_element(By.CSS_SELECTOR, 'div[name="Transaction_Amount"]').text
+        payer = row.find_element(
+            By.CSS_SELECTOR, 'div[name="Transaction_CardName"]').text
+        desc_payee = row.find_element(
+            By.CSS_SELECTOR, 'div[name="Transaction_TransactionDescription"]').text
+        amount = row.find_element(
+            By.CSS_SELECTOR, 'div[name="Transaction_Amount"]').text
 
         if len(desc_payee) >= 23:
             payee = desc_payee[:23]
@@ -125,6 +147,8 @@ def fetch_transactions(driver):
 
 
 """See http://en.wikipedia.org/wiki/Quicken_Interchange_Format for more info."""
+
+
 @messages('Writing QIF file...', 'OK', '')
 def write_qif(trans, file_name):
 
@@ -139,12 +163,12 @@ def write_qif(trans, file_name):
         print('!Type:CCard', file=f)
 
         for t in trans:
-            print('C', file=f) # status - uncleared
-            print('D' + format_tran_date_for_qif(t.date), file=f) # date
-            print('T' + t.amount, file=f) # amount
+            print('C', file=f)  # status - uncleared
+            print('D' + format_tran_date_for_qif(t.date), file=f)  # date
+            print('T' + t.amount, file=f)  # amount
             print('M' + t.payer, file=f)
             print('P' + t.payee + t.memo, file=f)
-            print('^', file=f) # end of record
+            print('^', file=f)  # end of record
 
 
 @messages('Writing CSV file...', 'OK', '')
@@ -154,7 +178,8 @@ def write_csv(trans, file_name):
     with codecs.open(file_name, 'w', encoding='utf-8') as f:
         print('Date,Amount,Payer,Payee', file=f)
         for t in trans:
-            print('"%s","%s","%s","%s"' % (format_tran_date_for_qif(t.date), t.amount, t.payer, t.payee), file=f)
+            print('"%s","%s","%s","%s"' % (format_tran_date_for_qif(
+                t.date), t.amount, t.payer, t.payee), file=f)
 
 
 def get_file_name(export_path, s_d, e_d, extension):
@@ -200,10 +225,11 @@ def export(csv, slow, captcha):
 
         page_count = len(page_trans)
         if page_count == 0:
-            break;
+            break
 
         print('Got %s transactions, from %s to %s' % (page_count,
-                                                      format_tran_date_for_qif(page_trans[0].date),
+                                                      format_tran_date_for_qif(
+                                                          page_trans[0].date),
                                                       format_tran_date_for_qif(page_trans[-1].date)))
         print('Opening next page...')
 
@@ -212,7 +238,7 @@ def export(csv, slow, captcha):
             if not nextButton.is_displayed():
                 break
             nextButton.click()
-            time.sleep(WAIT_DELAY);
+            time.sleep(WAIT_DELAY)
         except (NoSuchElementException,) as err:
             break
 
@@ -224,8 +250,10 @@ def export(csv, slow, captcha):
         print('Saving transactions...')
         db.save_transactions(new_trans)
 
-        s_d = reduce(lambda t1, t2: t1 if t1.date < t2.date else t2, new_trans).date
-        e_d = reduce(lambda t1, t2: t1 if t1.date > t2.date else t2, new_trans).date
+        s_d = reduce(lambda t1, t2: t1 if t1.date <
+                     t2.date else t2, new_trans).date
+        e_d = reduce(lambda t1, t2: t1 if t1.date >
+                     t2.date else t2, new_trans).date
 
         if csv:
             file_name = get_file_name(export_path, s_d, e_d, 'csv')
@@ -256,13 +284,17 @@ def export(csv, slow, captcha):
 
     """
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("""I load transactions from 28degrees-online.latitudefinancial.com.au.
 If no arguments specified, I will produce a nice QIF file for you
 To get CSV, specify run me with --csv parameter""")
-    parser.add_argument('--csv', action='store_true', help='Write CSV instead of QIF')
-    parser.add_argument('--slow', action='store_true', help='Increase wait delay between actions. Use on slow internet connections or when 28degrees is acting up.')
-    parser.add_argument('--captcha', action='store_true', help='Wait until enter pressed, before login, to allow manual completion of captcha.')
+    parser.add_argument('--csv', action='store_true',
+                        help='Write CSV instead of QIF')
+    parser.add_argument('--slow', action='store_true',
+                        help='Increase wait delay between actions. Use on slow internet connections or when 28degrees is acting up.')
+    parser.add_argument('--captcha', action='store_true',
+                        help='Wait until enter pressed, before login, to allow manual completion of captcha.')
     #parser.add_argument('--statements', action='store_true', default=False)
     args = parser.parse_args()
     export(**vars(args))

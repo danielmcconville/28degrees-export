@@ -26,13 +26,41 @@ As installation instructions for the things above vary for different platforms,
 I assume you know how install them, otherwise please let me know and I'll
 extend this section with detailed steps for your platform.
 
+### Ubuntu
+
+```sh
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install ./google-chrome-stable_current_amd64.deb --fix-broken
+google-chrome
+
+sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \\n  sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+
+sudo apt update && sudo apt -y upgrade
+sudo apt install -y python3-pip
+sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
+sudo apt install -y python3-venv
+
+mkdir environments
+cd environments
+python3 -m venv 28deg
+ls 28deg
+source 28deg/bin/activate
+```
+
+Then cd into this directory and:
+
+```sh
+python export.py --captcha --csv
+```
+
+
 ## Usage
 
 Simply start `export.py` in your shell of choice (cmd.exe, bash, zsh etc).
 You will be prompted for your username & password. **THESE details will not be
 used for anything but logging into the 28degrees' website.**
 
-If your Internet connection is slow (because Australia), or 28degrees site is being particularly 
+If your Internet connection is slow (because Australia), or 28degrees site is being particularly
 slow today, and you see errors/exceptions in the console, use `--slow` command line parameter, which
 will increase connection timeout to 25 seconds. I know right, we're not here to fuck spiders.
 
@@ -47,6 +75,11 @@ you can ignore this one - we simply need it to keep track of transactions that h
 been recorded.
 
 If you want to re-start the process, just delete (or re-name, which is safer) transactions.db file.
+
+## Docker
+
+The docker is not working as there is a captcha interaction needed and the display is not exported. If you want to fix
+it make sure you uncomment line 78 and comment line 79 in export.py.
 
 ## Errors / support
 
