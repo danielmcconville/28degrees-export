@@ -28,6 +28,8 @@ extend this section with detailed steps for your platform.
 
 ### Ubuntu
 
+To setup the environment:
+
 ```sh
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt install ./google-chrome-stable_current_amd64.deb --fix-broken
@@ -40,17 +42,17 @@ sudo apt install -y python3-pip
 sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
 sudo apt install -y python3-venv
 
-mkdir environments
-cd environments
+mkdir -p ~/dev/python/environments
+cd ~/dev/python/environments
 python3 -m venv 28deg
-ls 28deg
-source 28deg/bin/activate
 ```
 
-Then cd into this directory and:
+To execute the script from this directory:
 
 ```sh
+source ~/dev/python/environments/28deg/bin/activate
 python export.py --captcha --csv
+deactivate
 ```
 
 
