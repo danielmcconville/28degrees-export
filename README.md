@@ -28,6 +28,9 @@ extend this section with detailed steps for your platform.
 
 ### Ubuntu
 
+__Note: if the below doesnt work then install the steps as per the docker file (adding sudo where neccessary)__
+__TODO: replace the below with correct steps__
+
 To setup the environment:
 
 ```sh
@@ -35,16 +38,21 @@ wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt install ./google-chrome-stable_current_amd64.deb --fix-broken
 google-chrome
 
-sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \\n  sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - && sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
 
 sudo apt update && sudo apt -y upgrade
 sudo apt install -y python3-pip
 sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
 sudo apt install -y python3-venv
+sudo apt install chromium-chromedriver
+apt-get install -y libglib2.0 libnss3 libgconf-2-4 libfontconfig1
 
 mkdir -p ~/dev/python/environments
 cd ~/dev/python/environments
 python3 -m venv 28deg
+source ~/dev/python/environments/28deg/bin/activate
+pip install selenium webdriver-manager
+deactivate
 ```
 
 To execute the script from this directory:
