@@ -1,13 +1,10 @@
-
 # Export to QIF/CSV from 28degrees Master Card website
-
 
 ## Description
 
 This utility logs into https://28degrees-online.latitudefinancial.com.au website, using
 your username and password, and simply grabs all your transactions from there,
 saving them into QIF file.
-
 
 ## Installation
 
@@ -28,8 +25,8 @@ extend this section with detailed steps for your platform.
 
 ### Ubuntu
 
-__Note: if the below doesnt work then install the steps as per the docker file (adding sudo where neccessary)__
-__TODO: replace the below with correct steps__
+**Note: if the below doesnt work then install the steps as per the docker file (adding sudo where neccessary)**
+**TODO: replace the below with correct steps**
 
 To setup the environment:
 
@@ -62,7 +59,6 @@ source ~/dev/python/environments/28deg/bin/activate
 python export.py --captcha --csv
 deactivate
 ```
-
 
 ## Usage
 
@@ -98,6 +94,15 @@ let me know of any issues you have with it.
 
 Also please feel free to submit your ideas/improvement suggestions.
 
+### WSL2
+
+If running on WSL2, you may get issues with exporting the display. If you cannot successfully run `xeyes`, check:
+
+echo $DISPLAY should equal :0
+
+ls -ltra /tmp/.X11-unix should have X0 in it
+
+If X is some other value than 0 then make sure you dont have any X servers running then issue a wsl --suhutdown in powershell and check again
 
 ## Disclaimer
 
